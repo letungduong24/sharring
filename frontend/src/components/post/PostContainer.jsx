@@ -6,10 +6,10 @@ import { toast } from 'sonner'
 import useInfiniteScroll from '../../lib/useInfiniteScroll'
 
 const PostContainer = ({ userId }) => {
-    const { posts, loading, fetchPosts, loadMorePosts, hasMore } = usePostStore();
+    const { posts, loading, isLoadingMore, fetchPosts, loadMorePosts, hasMore } = usePostStore();
     
     const lastPostElementRef = useInfiniteScroll({
-        loading,
+        loading: isLoadingMore,
         hasMore,
         onLoadMore: loadMorePosts
     });
@@ -49,7 +49,7 @@ const PostContainer = ({ userId }) => {
                                 />
                             </div>
                         ))}
-                        {loading && posts.length > 0 && (
+                        {isLoadingMore && (
                             <PostSkeleton />
                         )}
                     </>

@@ -4,6 +4,7 @@ import api from '../lib/axios';
 const usePostStore = create((set) => ({
     posts: [],
     loading: true,
+    isLoadingMore: false,
     createPostLoading: false,
     likePostLoading: false,
     commentPostLoading: false,
@@ -13,6 +14,7 @@ const usePostStore = create((set) => ({
 
     // Fetch posts with pagination
     fetchPosts: async (page = 1, userId = null) => {
+        set({ loading: page === 1, isLoadingMore: page > 1 });
         try {
             const url = userId 
                 ? `/posts?page=${page}&userId=${userId}`
@@ -23,10 +25,11 @@ const usePostStore = create((set) => ({
                 posts: page === 1 ? response.data.posts : [...state.posts, ...response.data.posts],
                 currentPage: page,
                 hasMore: response.data.hasMore,
-                loading: false
+                loading: false,
+                isLoadingMore: false
             }));
         } catch (error) {
-            set({ loading: false });
+            set({ loading: false, isLoadingMore: false });
             throw error;
         }
     },
@@ -34,10 +37,10 @@ const usePostStore = create((set) => ({
     // Load more posts
     loadMorePosts: async () => {
         const { currentPage, hasMore, fetchPosts } = usePostStore.getState();
-        if (!hasMore) return;  // Don't load more if no more posts
+        if (!hasMore) return;
         
-        const nextPage = currentPage + 1;  // Calculate next page
-        await fetchPosts(nextPage);  // Fetch next page of posts
+        const nextPage = currentPage + 1;
+        await fetchPosts(nextPage);
     },
 
     // Create a new post
@@ -60,9 +63,10 @@ const usePostStore = create((set) => ({
     resetPosts: () => {
         set({
             posts: [],
-            currentPage: 1,  // Reset to first page
+            currentPage: 1,
             hasMore: true,
-            loading: true
+            loading: true,
+            isLoadingMore: false
         });
     },
 
@@ -112,8 +116,7 @@ const usePostStore = create((set) => ({
                 formData.append('image', image);
             }
 
-            const response = await api.post(`/posts/comment/${postId}`, formData, {
-            });
+            const response = await api.post(`/posts/comment/${postId}`, formData);
             set((state) => ({
                 posts: state.posts.map((post) =>
                     post._id === postId ? response.data : post

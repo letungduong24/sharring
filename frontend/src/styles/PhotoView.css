@@ -1,0 +1,7 @@
+.photo-view-overlay {
+    z-index: 100 !important;
+}
+
+.photo-view-content {
+    z-index: 101 !important;
+} 

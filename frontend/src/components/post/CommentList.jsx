@@ -2,20 +2,20 @@ import React from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { PhotoView } from 'react-photo-view';
-import useInfiniteScroll from '../../lib/useInfiniteScroll';
 import CommentSkeleton from './CommentSkeleton';
+import useInfiniteScroll from '../../lib/useInfiniteScroll';
 
-const CommentList = ({ comments, onLoadMore, hasMore, isLoading }) => {
+const CommentList = ({ comments, onLoadMore, hasMore, isLoading, isLoadingMore }) => {
+    const lastCommentRef = useInfiniteScroll({
+        loading: isLoadingMore,
+        hasMore,
+        onLoadMore
+    });
+
     // Sort comments by createdAt in descending order (newest first)
     const sortedComments = [...comments].sort((a, b) => 
         new Date(b.createdAt) - new Date(a.createdAt)
     );
-
-    const lastCommentRef = useInfiniteScroll({
-        loading: isLoading,
-        hasMore,
-        onLoadMore
-    });
 
     return (
         <div className="space-y-4">
@@ -30,8 +30,8 @@ const CommentList = ({ comments, onLoadMore, hasMore, isLoading }) => {
                     {sortedComments.map((comment, index) => (
                         <div 
                             key={comment._id} 
-                            className="flex gap-3"
                             ref={index === sortedComments.length - 1 ? lastCommentRef : null}
+                            className="flex gap-3"
                         >
                             <img 
                                 src={comment.user.profilePicture || '/default-avatar.png'} 
@@ -62,10 +62,15 @@ const CommentList = ({ comments, onLoadMore, hasMore, isLoading }) => {
                             </div>
                         </div>
                     ))}
-                    {isLoading && comments.length > 0 && (
+                    {isLoadingMore && (
                         <CommentSkeleton />
                     )}
                 </>
+            )}
+            {comments.length === 0 && !isLoading && (
+                <div className="text-center py-4 text-gray-500">
+                    Chưa có bình luận nào
+                </div>
             )}
         </div>
     );

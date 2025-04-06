@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import useAuthStore from '../../store/authStore';
-import usePostStore from '../../store/postStore';
+import useCommentStore from '../../store/commentStore';
 import { toast } from 'sonner';
 import { CiImageOn } from "react-icons/ci";
 import { uploadImage } from '../../lib/uploadImage';
@@ -13,7 +13,7 @@ const CommentComposer = ({ postId }) => {
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef(null);
     const { user } = useAuthStore();
-    const { commentPost, commentPostLoading } = usePostStore();
+    const { addComment, isSubmitting } = useCommentStore();
 
     const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
 
@@ -65,12 +65,7 @@ const CommentComposer = ({ postId }) => {
                 }
             }
 
-            const commentData = {
-                content: content.trim(),
-                image: imageUrl
-            };
-
-            await commentPost({ postId, ...commentData });
+            await addComment(postId, content.trim(), imageUrl);
             toast.success('Bình luận thành công');
             setContent('');
             setImage(null);
@@ -131,14 +126,14 @@ const CommentComposer = ({ postId }) => {
                         />
                         <button
                             type="submit"
-                            disabled={commentPostLoading || isUploading || (!content.trim() && !image)}
+                            disabled={isSubmitting() || isUploading || (!content.trim() && !image)}
                             className={`cursor-pointer px-4 py-2 rounded-md font-bold ${
-                                commentPostLoading || isUploading || (!content.trim() && !image)
+                                isSubmitting() || isUploading || (!content.trim() && !image)
                                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                                     : 'bg-black text-gray-200 hover:bg-gray-700 hover:text-white transition-all duration-300'
                             }`}
                         >
-                            {commentPostLoading || isUploading ? 'Đang gửi...' : 'Gửi'}
+                            {isSubmitting() || isUploading ? 'Đang gửi...' : 'Gửi'}
                         </button>
                     </div>
                 </form>

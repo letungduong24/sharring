@@ -3,65 +3,42 @@ import api from '../lib/axios';
 
 const useCommentStore = create((set, get) => ({
     // State
-    commentsByPost: {}, // { postId: { data: [], page: 1, hasMore: true } }
-    loadingStates: {}, // { postId: boolean }
+    comments: [],
+    page: 1,
+    hasMore: true,
+    loading: false,
+    loadingMore: false,
     submitting: false,
-
-    // Initialize comments for a post
-    initializeComments: (postId, initialComments = []) => {
-        set((state) => ({
-            commentsByPost: {
-                ...state.commentsByPost,
-                [postId]: {
-                    data: initialComments,
-                    page: 1,
-                    hasMore: initialComments.length >= 6
-                }
-            }
-        }));
-    },
 
     // Fetch comments for a post
     fetchComments: async (postId, page = 1) => {
-        const currentState = get().commentsByPost[postId];
-        
         // Don't fetch if we're already at the end
-        if (currentState && !currentState.hasMore && page > 1) return;
+        if (!get().hasMore && page > 1) return;
 
-        set((state) => ({
-            loadingStates: { ...state.loadingStates, [postId]: true }
-        }));
+        set({ loading: page === 1, loadingMore: page > 1 });
 
         try {
             const response = await api.get(`/posts/comments/${postId}?page=${page}`);
             
-            set((state) => ({
-                commentsByPost: {
-                    ...state.commentsByPost,
-                    [postId]: {
-                        data: page === 1 
-                            ? response.data.comments 
-                            : [...(state.commentsByPost[postId]?.data || []), ...response.data.comments],
-                        page: response.data.currentPage,
-                        hasMore: response.data.hasMore
-                    }
-                }
-            }));
+            set({
+                comments: page === 1 
+                    ? response.data.comments 
+                    : [...get().comments, ...response.data.comments],
+                page: page,
+                hasMore: response.data.hasMore,
+                loading: false,
+                loadingMore: false
+            });
         } catch (error) {
             console.error('Error fetching comments:', error);
-        } finally {
-            set((state) => ({
-                loadingStates: { ...state.loadingStates, [postId]: false }
-            }));
+            set({ loading: false, loadingMore: false });
         }
     },
 
     // Load more comments
     loadMore: async (postId) => {
-        const currentState = get().commentsByPost[postId];
-        if (!currentState || !currentState.hasMore) return;
-
-        await get().fetchComments(postId, currentState.page + 1);
+        if (!get().hasMore) return;
+        await get().fetchComments(postId, get().page + 1);
     },
 
     // Add a new comment
@@ -79,13 +56,7 @@ const useCommentStore = create((set, get) => ({
             const newComment = response.data.comments[0];
 
             set((state) => ({
-                commentsByPost: {
-                    ...state.commentsByPost,
-                    [postId]: {
-                        ...state.commentsByPost[postId],
-                        data: [newComment, ...(state.commentsByPost[postId]?.data || [])]
-                    }
-                }
+                comments: [...state.comments, newComment]
             }));
 
             return newComment;
@@ -103,15 +74,7 @@ const useCommentStore = create((set, get) => ({
             await api.delete(`/posts/comment/${postId}/${commentId}`);
             
             set((state) => ({
-                commentsByPost: {
-                    ...state.commentsByPost,
-                    [postId]: {
-                        ...state.commentsByPost[postId],
-                        data: state.commentsByPost[postId].data.filter(
-                            comment => comment._id !== commentId
-                        )
-                    }
-                }
+                comments: state.comments.filter(comment => comment._id !== commentId)
             }));
         } catch (error) {
             console.error('Error deleting comment:', error);
@@ -119,24 +82,22 @@ const useCommentStore = create((set, get) => ({
         }
     },
 
-    // Clear comments for a specific post
-    clearComments: (postId) => {
-        set((state) => {
-            const newCommentsByPost = { ...state.commentsByPost };
-            delete newCommentsByPost[postId];
-            return { commentsByPost: newCommentsByPost };
+    // Clear comments
+    clearComments: () => {
+        set({
+            comments: [],
+            page: 1,
+            hasMore: true,
+            loading: false,
+            loadingMore: false
         });
     },
 
-    // Clear all comments (useful for logout)
-    clearAllComments: () => {
-        set({ commentsByPost: {}, loadingStates: {} });
-    },
-
     // Getters
-    getComments: (postId) => get().commentsByPost[postId]?.data || [],
-    isLoading: (postId) => get().loadingStates[postId] || false,
-    hasMore: (postId) => get().commentsByPost[postId]?.hasMore || false,
+    getComments: () => get().comments,
+    isLoading: () => get().loading,
+    isLoadingMore: () => get().loadingMore,
+    hasMore: () => get().hasMore,
     isSubmitting: () => get().submitting
 }));
 

@@ -4,23 +4,34 @@ import CommentList from './CommentList';
 import useCommentStore from '../../store/commentStore';
 
 const CommentModal = ({ post, onClose }) => {
-    const { fetchComments, getComments, isLoading, hasMore, loadMore } = useCommentStore();
+    const { fetchComments, getComments, isLoading, isLoadingMore, hasMore, loadMore, clearComments } = useCommentStore();
     const [comments, setComments] = useState([]);
 
     useEffect(() => {
-        // Fetch initial comments when modal opens
-        fetchComments(post._id);
-    }, [post._id]);
+        if (post) {
+            // Fetch initial comments when modal opens
+            fetchComments(post._id);
+        }
+
+        // Cleanup function to clear comments when modal closes
+        return () => {
+            clearComments();
+        };
+    }, [post?._id]);
 
     useEffect(() => {
-        // Update comments when they change in the store
-        setComments(getComments(post._id));
-    }, [getComments(post._id)]);
+        if (post) {
+            // Update comments when they change in the store
+            setComments(getComments());
+        }
+    }, [getComments()]);
+
+    if (!post) return null;
 
     return (
         <dialog 
-            id={`comment_modal_${post._id}`} 
             className="modal modal-bottom sm:modal-middle"
+            open
         >
             <div className="modal-box max-w-2xl max-h-[90vh] flex flex-col">
                 <div className="flex justify-between items-center mb-4">
@@ -36,8 +47,9 @@ const CommentModal = ({ post, onClose }) => {
                     <CommentList 
                         comments={comments}
                         onLoadMore={() => loadMore(post._id)}
-                        hasMore={hasMore(post._id)}
-                        isLoading={isLoading(post._id)}
+                        hasMore={hasMore}
+                        isLoading={isLoading()}
+                        isLoadingMore={isLoadingMore()}
                     />
                 </div>
                 <div className="mt-4">

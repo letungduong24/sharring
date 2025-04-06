@@ -13,8 +13,7 @@ import {PhotoView} from "react-photo-view";
 const Profile = () => {
     const { username } = useParams();
     const navigate = useNavigate();
-    const { user, getUserProfile, followUser, unfollowUser, getProfileLoading, followLoading, unfollowLoading, updateProfile, updateProfileLoading } = useAuthStore();
-    const [profile, setProfile] = useState(null);
+    const { user, getUserProfile, followUser, unfollowUser, getProfileLoading, followLoading, unfollowLoading, updateProfile, updateProfileLoading, profile } = useAuthStore();
     const [bio, setBio] = useState('');
     const [usernameInput, setUsernameInput] = useState('');
     const [bioError, setBioError] = useState('');
@@ -150,17 +149,16 @@ const Profile = () => {
         );
     }
 
-    if (!profile) {
+    if (!profile && !getProfileLoading) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <p className="text-gray-600">Không tìm thấy hồ sơ</p>
+            <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
+                <p className="text-gray-600 text-5xl font-bold">404</p>
+                <p className="text-gray-600 text-2xl ">Không tìm thấy trang cá nhân</p>
             </div>
         );
     }
 
-    console.log('Rendering profile with:', { user, profile });
     const isOwnProfile = user._id === profile._id;
-    console.log('Is own profile:', isOwnProfile);
 
     return (
         <div className="text-gray-600 min-h-screen w-full p-2 md:p-5 bg-gray-50 flex flex-col items-center gap-5">
@@ -205,7 +203,7 @@ const Profile = () => {
                 <PostButton />
             )}
 
-            <PostContainer />
+            <PostContainer userId={profile._id} />
             
             <dialog id="my_modal_2" className="modal text-gray-600">
                 <div className="modal-box">

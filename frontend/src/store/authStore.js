@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import api from '../lib/axios';
+import { toast } from 'sonner';
 
 const useAuthStore = create((set) => ({
     user: null,
@@ -10,7 +11,7 @@ const useAuthStore = create((set) => ({
     signInLoading: false,
     signUploading: false,
     updateProfileLoading: false,
-
+    profile: null,
     // Check if user is authenticated
     checkAuth: async () => {
         try {
@@ -84,9 +85,10 @@ const useAuthStore = create((set) => ({
 
     // User profile functions
     getUserProfile: async (username) => {
+        set({ getProfileLoading: true });
         try {
             const response = await api.get(`/auth/profile/${username}`);
-            return response.data;
+            set({ profile: response.data });
         } catch (error) {
             throw error;
         } finally {

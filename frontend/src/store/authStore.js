@@ -12,6 +12,7 @@ const useAuthStore = create((set) => ({
     signUploading: false,
     updateProfileLoading: false,
     profile: null,
+    setProfile: (profile) => set({ profile }),
     // Check if user is authenticated
     checkAuth: async () => {
         try {
@@ -74,7 +75,7 @@ const useAuthStore = create((set) => ({
                 bio,
                 profilePicture
             });
-            set({ user: response.data.user });
+            set({ profile: response.data.user });
             return response.data;
         } catch (error) {
             throw error;
@@ -89,6 +90,7 @@ const useAuthStore = create((set) => ({
         try {
             const response = await api.get(`/auth/profile/${username}`);
             set({ profile: response.data });
+            return response.data;
         } catch (error) {
             throw error;
         } finally {
@@ -101,7 +103,7 @@ const useAuthStore = create((set) => ({
             set({ followLoading: true });
             const response = await api.post(`/auth/follow/${userId}`);
             toast.success('Đã theo dõi người dùng');
-            return response.data;
+            set({profile: {...profile, followers: [...profile.followers, userId]}})
         } catch (error) {
             throw error;
         } finally {
@@ -114,7 +116,7 @@ const useAuthStore = create((set) => ({
             set({ unfollowLoading: true });
             const response = await api.post(`/auth/unfollow/${userId}`);
             toast.success('Đã bỏ theo dõi người dùng');
-            return response.data;
+            set({profile: {...profile, followers: profile.followers.filter(id => id !== userId)}})
         } catch (error) {
             throw error;
         } finally {

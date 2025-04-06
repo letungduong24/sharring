@@ -10,7 +10,7 @@ import { vi } from 'date-fns/locale';
 import CommentModal from './CommentModal';
 
 const PostCard = ({ post, isFirst, isLast }) => {
-    const { likePost, unlikePost, deletePost } = usePostStore();
+    const { likePost, unlikePost, deletePost, likePostLoading } = usePostStore();
     const [isLiked, setIsLiked] = useState(post.likes.includes(post.author._id));
     const [showOptions, setShowOptions] = useState(false);
     const [showCommentModal, setShowCommentModal] = useState(false);
@@ -91,8 +91,9 @@ const PostCard = ({ post, isFirst, isLast }) => {
                 </div>
                 <div className={`flex gap-4 ${isLast ? 'mt-4' : 'my-4'}`}>
                     <button 
-                        className="flex gap-0.5 items-center text-xl cursor-pointer"
+                        className="flex gap-0.5 items-center text-xl cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         onClick={handleLike}
+                        disabled={likePostLoading}
                     >
                         {isLiked ? <FaHeart className="text-red-500" /> : <FaRegHeart />}
                         <span className="text-sm">{post.likes.length}</span>

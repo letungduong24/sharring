@@ -24,9 +24,9 @@ const Profile = () => {
         const fetchProfile = async () => {
             try {
                 const data = await getUserProfile(username);
-                setProfile(data);
                 setBio(data.bio || '');
                 setUsernameInput(data.username || '');
+                console.log(data || 'no data')
             } catch (err) {
                 console.log(err)
             }
@@ -77,11 +77,7 @@ const Profile = () => {
     const handleFollow = async () => {
         try {
             await followUser(profile._id);
-            setProfile(prev => ({
-                ...prev,
-                followers: [...prev.followers, user._id],
-                isFollowing: true
-            }));
+            toast.success("Theo dõi thành công");
         } catch (err) {
             toast.error(err.response?.data?.message || "Không thể theo dõi người dùng");
         }
@@ -90,11 +86,7 @@ const Profile = () => {
     const handleUnfollow = async () => {
         try {
             await unfollowUser(profile._id);
-            setProfile(prev => ({
-                ...prev,
-                followers: prev.followers.filter(id => id !== user._id),
-                isFollowing: false
-            }));
+            toast.success("Bỏ theo dõi thành công");
         } catch (err) {
             toast.error(err.response?.data?.message || "Không thể bỏ theo dõi người dùng");
         }
@@ -127,11 +119,6 @@ const Profile = () => {
                 profilePicture: imageUrl
             });
 
-            // Update the profile state with the new image URL
-            setProfile(prev => ({
-                ...prev,
-                profilePicture: imageUrl
-            }));
 
             toast.success('Cập nhật ảnh đại diện thành công');
             document.getElementById('image_modal').close();

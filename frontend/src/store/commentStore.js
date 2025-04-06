@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import api from '../lib/axios';
+import usePostStore from './postStore';
 
 const useCommentStore = create((set, get) => ({
     // State
@@ -58,6 +59,10 @@ const useCommentStore = create((set, get) => ({
             set((state) => ({
                 comments: [...state.comments, newComment]
             }));
+
+            // Update post's comment count in post store
+            const { posts, updatePostCommentCount } = usePostStore.getState();
+            updatePostCommentCount(postId, posts.find(post => post._id === postId)?.comments.length + 1);
 
             return newComment;
         } catch (error) {

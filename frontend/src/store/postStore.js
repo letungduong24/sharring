@@ -164,6 +164,15 @@ const usePostStore = create((set) => ({
             throw error;
         }
     },
+
+    // Update post's comment count
+    updatePostCommentCount: (postId, count) => {
+        set((state) => ({
+            posts: state.posts.map((post) =>
+                post._id === postId ? { ...post, comments: Array(count).fill(null) } : post
+            ),
+        }));
+    },
 }));
 
-export default usePostStore; 
+export default usePostStore;

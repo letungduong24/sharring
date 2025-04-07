@@ -9,31 +9,39 @@ import PostContainer from "../components/post/PostContainer";
 import { CiCamera } from "react-icons/ci";
 import { uploadImage } from "../lib/uploadImage.js";
 import {PhotoView} from "react-photo-view";
-
+import usePostStore from "../store/postStore";
 const Profile = () => {
     const { username } = useParams();
     const navigate = useNavigate();
-    const { user, getUserProfile, followUser, unfollowUser, getProfileLoading, followLoading, unfollowLoading, updateProfile, updateProfileLoading, profile } = useAuthStore();
+    const { user, getUserProfile, followUser, unfollowUser, getProfileLoading, followLoading, unfollowLoading, updateProfile, updateProfileLoading, profile, setProfile } = useAuthStore();
     const [bio, setBio] = useState('');
     const [usernameInput, setUsernameInput] = useState('');
     const [bioError, setBioError] = useState('');
     const [selectedImage, setSelectedImage] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
-
+    const [isFollowing, setIsFollowing] = useState(false);
+    console.log(username)
     useEffect(() => {
         const fetchProfile = async () => {
             try {
                 const data = await getUserProfile(username);
                 setBio(data.bio || '');
                 setUsernameInput(data.username || '');
-                console.log(data || 'no data')
+                // Check if current user is following this profile
+                if (data.followers && user) {
+                    setIsFollowing(data.followers.some(follower => follower._id === user._id));
+                }
             } catch (err) {
                 console.log(err)
             }
         };
 
         fetchProfile();
-    }, [username, getUserProfile]);
+
+        return () => {
+            usePostStore.getState().resetProfilePosts();
+        }
+    }, [username, getUserProfile, user?._id]);
 
     const handleBioChange = (e) => {
         const value = e.target.value;
@@ -76,19 +84,25 @@ const Profile = () => {
 
     const handleFollow = async () => {
         try {
-            await followUser(profile._id);
-            toast.success("Theo dõi thành công");
+            if (isFollowing) {
+                await unfollowUser(profile._id);
+                setIsFollowing(false);
+                // Update the profile's followers array
+                setProfile({
+                    ...profile,
+                    followers: profile.followers.filter(follower => follower._id !== user._id)
+                });
+            } else {
+                await followUser(profile._id);
+                setIsFollowing(true);
+                // Update the profile's followers array
+                setProfile({
+                    ...profile,
+                    followers: [...profile.followers, { _id: user._id }]
+                });
+            }
         } catch (err) {
-            toast.error(err.response?.data?.message || "Không thể theo dõi người dùng");
-        }
-    };
-
-    const handleUnfollow = async () => {
-        try {
-            await unfollowUser(profile._id);
-            toast.success("Bỏ theo dõi thành công");
-        } catch (err) {
-            toast.error(err.response?.data?.message || "Không thể bỏ theo dõi người dùng");
+            toast.error(err.response?.data?.message || "Không thể thực hiện thao tác");
         }
     };
 
@@ -130,6 +144,14 @@ const Profile = () => {
         }
     };
 
+    const handleOpenFollowers = () => {
+        document.getElementById('followers_modal').showModal();
+    };
+
+    const handleOpenFollowing = () => {
+        document.getElementById('following_modal').showModal();
+    };
+
     if (getProfileLoading) {
         return (
             <Loading />
@@ -157,8 +179,19 @@ const Profile = () => {
                             <h4 className="font-bold text-2xl">{profile.username}</h4>
                             <h4 className=" text-sm font-semibold">{profile.bio || 'Chưa có tiểu sử'}</h4>
                         </div>
-                        <div className="">
-                            <h4 className="text-sm">{profile.followers?.length !==0 ? `${profile.followers?.length} người theo dõi` : 'Không có người theo dõi'}</h4>
+                        <div className="flex gap-4">
+                            <button 
+                                onClick={handleOpenFollowers}
+                                className="text-sm hover:underline cursor-pointer"
+                            >
+                                {profile.followers?.length || 0} người theo dõi
+                            </button>
+                            <button 
+                                onClick={handleOpenFollowing}
+                                className="text-sm hover:underline cursor-pointer"
+                            >
+                                {profile.following?.length || 0} đang theo dõi
+                            </button>
                         </div>
                     </div>
                     {/* avatar section */}
@@ -173,22 +206,44 @@ const Profile = () => {
                                 alt="" 
                             />
                         </PhotoView>
-                        <CiCamera 
-                            onClick={handleImageClick}
-                            className="w-8 h-8 absolute bottom-0 right-0 bg-white rounded-full p-2 border border-gray-300 stroke-[1.0] cursor-pointer hover:bg-gray-100" 
-                        />
+                        {isOwnProfile && (
+                            <CiCamera 
+                                onClick={handleImageClick}
+                                className="w-8 h-8 absolute bottom-0 right-0 bg-white rounded-full p-2 border border-gray-300 stroke-[1.0] cursor-pointer hover:bg-gray-100" 
+                            />
+                        )}
                     </div>
                 </div>
-                {isOwnProfile && (
-                    <div className="w-full px-5 pb-5">
-                        <button onClick={()=>document.getElementById('my_modal_2').showModal()} className="border border-gray-300 font-bold cursor-pointer w-full px-2 py-2 rounded-lg">Sửa trang cá nhân</button>
-                    </div>
-                )}
+                <div className="w-full px-5 pb-5">
+                    {isOwnProfile ? (
+                        <button 
+                            onClick={()=>document.getElementById('my_modal_2').showModal()} 
+                            className="border border-gray-300 font-bold cursor-pointer w-full px-2 py-2 rounded-lg"
+                        >
+                            Sửa trang cá nhân
+                        </button>
+                    ) : (
+                        <button 
+                            onClick={handleFollow}
+                            disabled={followLoading || unfollowLoading}
+                            className={`w-full px-2 py-2 rounded-lg font-bold cursor-pointer ${
+                                isFollowing 
+                                    ? 'bg-gray-200 text-gray-700 hover:bg-gray-300' 
+                                    : 'bg-black text-white hover:bg-gray-800'
+                            }`}
+                        >
+                            {followLoading || unfollowLoading 
+                                ? 'Đang xử lý...' 
+                                : isFollowing 
+                                    ? 'Bỏ theo dõi' 
+                                    : 'Theo dõi'
+                            }
+                        </button>
+                    )}
+                </div>
             </div>
 
-            {isOwnProfile && (
-                <PostButton />
-            )}
+            {isOwnProfile && <PostButton />}
 
             <PostContainer userId={profile._id} />
             
@@ -300,6 +355,77 @@ const Profile = () => {
                                 Hủy
                             </button>
                         </div>
+                    </div>
+                </div>
+                <form method="dialog" className="modal-backdrop">
+                    <button>close</button>
+                </form>
+            </dialog>
+
+            {/* Followers Modal */}
+            <dialog id="followers_modal" className="modal">
+                <div className="modal-box">
+                    <h3 className="font-bold text-lg mb-4">Người theo dõi</h3>
+                    <div className="flex flex-col gap-2 max-h-[60vh] overflow-y-auto">
+                        {profile.followers?.length > 0 ? (
+                            profile.followers.map((follower) => (
+                                <div 
+                                    key={follower._id} 
+                                    className="flex items-center gap-3 p-2 hover:bg-gray-100 rounded-lg cursor-pointer"
+                                    onClick={() => {
+                                        document.getElementById('followers_modal').close();
+                                        navigate(`/profile/${follower.username}`);
+                                    }}
+                                >
+                                    <img 
+                                        src={follower.profilePicture || defaultAvt} 
+                                        alt={follower.username}
+                                        className="w-10 h-10 rounded-full object-cover"
+                                    />
+                                    <div>
+                                        <p className="font-semibold">{follower.username}</p>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <p className="text-center text-gray-500">Chưa có người theo dõi</p>
+                        )}
+                    </div>
+                </div>
+                <form method="dialog" className="modal-backdrop">
+                    <button>close</button>
+                </form>
+            </dialog>
+
+            {/* Following Modal */}
+            <dialog id="following_modal" className="modal">
+                <div className="modal-box">
+                    <h3 className="font-bold text-lg mb-4">Đang theo dõi</h3>
+                    <div className="flex flex-col gap-2 max-h-[60vh] overflow-y-auto">
+                        {profile.following?.length > 0 ? (
+                            profile.following.map((following) => (
+                                <div 
+                                    key={following._id} 
+                                    className="flex items-center gap-3 p-2 hover:bg-gray-100 rounded-lg cursor-pointer"
+                                    onClick={() => {
+                                        document.getElementById('following_modal').close();
+                                        navigate(`/profile/${following.username}`);
+                                    }}
+                                >
+                                    <img 
+                                        src={following.profilePicture || defaultAvt} 
+                                        alt={following.username}
+                                        className="w-10 h-10 rounded-full object-cover"
+                                    />
+                                    <div>
+                                        <p className="font-semibold">{following.username}</p>
+                                        <p className="text-sm text-gray-500">{following.bio || 'Chưa có tiểu sử'}</p>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <p className="text-center text-gray-500">Chưa theo dõi ai</p>
+                        )}
                     </div>
                 </div>
                 <form method="dialog" className="modal-backdrop">

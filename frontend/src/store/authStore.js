@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import api from '../lib/axios';
 import { toast } from 'sonner';
+import usePostStore from '../store/postStore';
 
 const useAuthStore = create((set) => ({
     user: null,
@@ -27,6 +28,8 @@ const useAuthStore = create((set) => ({
     signin: async ({ email, password }) => {
         set({signInLoading: true})
         try {
+            // Reset posts before signing in
+            usePostStore.getState().resetPosts();
             const response = await api.post('/auth/login', {
                 email,
                 password
@@ -59,6 +62,10 @@ const useAuthStore = create((set) => ({
     // Sign out
     signout: async () => {
         try {
+            // Reset posts and profile before signing out
+            usePostStore.getState().resetPosts();
+            set({ profile: null });
+
             await api.post('/auth/logout');
             set({ user: null, error: null });
         } catch (error) {
@@ -89,8 +96,14 @@ const useAuthStore = create((set) => ({
         set({ getProfileLoading: true });
         try {
             const response = await api.get(`/auth/profile/${username}`);
-            set({ profile: response.data });
-            return response.data;
+            // Store the profile with counts and IDs
+            const profile = {
+                ...response.data,
+                followers: response.data.followers || [],
+                following: response.data.following || []
+            };
+            set({ profile });
+            return profile;
         } catch (error) {
             throw error;
         } finally {
@@ -102,9 +115,21 @@ const useAuthStore = create((set) => ({
         try {
             set({ followLoading: true });
             const response = await api.post(`/auth/follow/${userId}`);
+            // Update the profile's followers array with the current user's data
+            set((state) => ({
+                profile: {
+                    ...state.profile,
+                    followers: [...state.profile.followers, {
+                        _id: state.user._id,
+                        username: state.user.username,
+                        profilePicture: state.user.profilePicture,
+                        bio: state.user.bio
+                    }]
+                }
+            }));
             toast.success('Đã theo dõi người dùng');
-            set({profile: {...profile, followers: [...profile.followers, userId]}})
         } catch (error) {
+            toast.error(error.response?.data?.message || 'Không thể theo dõi người dùng');
             throw error;
         } finally {
             set({ followLoading: false });
@@ -115,9 +140,16 @@ const useAuthStore = create((set) => ({
         try {
             set({ unfollowLoading: true });
             const response = await api.post(`/auth/unfollow/${userId}`);
+            // Update the profile's followers array by removing the current user
+            set((state) => ({
+                profile: {
+                    ...state.profile,
+                    followers: state.profile.followers.filter(follower => follower._id !== state.user._id)
+                }
+            }));
             toast.success('Đã bỏ theo dõi người dùng');
-            set({profile: {...profile, followers: profile.followers.filter(id => id !== userId)}})
         } catch (error) {
+            toast.error(error.response?.data?.message || 'Không thể bỏ theo dõi người dùng');
             throw error;
         } finally {
             set({ unfollowLoading: false });

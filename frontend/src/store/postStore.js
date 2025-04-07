@@ -2,55 +2,196 @@ import { create } from 'zustand';
 import api from '../lib/axios';
 
 const usePostStore = create((set) => ({
-    posts: [],
-    loading: true,
-    isLoadingMore: false,
+    // Feed posts state
+    feedPosts: [],
+    feedLoading: true,
+    feedLoadingMore: false,
+    feedCurrentPage: {
+        following: 1,
+        explore: 1,
+        search: 1
+    },
+    feedHasMore: {
+        following: true,
+        explore: true,
+        search: true
+    },
+    feedType: null,
+    searchQuery: '',
+
+    // Profile posts state
+    profilePosts: [],
+    profileLoading: true,
+    profileLoadingMore: false,
+    profileCurrentPage: 1,
+    profileHasMore: true,
+    profileUserId: null,
+
+    // Other states
+    currentPost: null,
     createPostLoading: false,
     likePostLoading: false,
     commentPostLoading: false,
     deletePostLoading: false,
-    currentPage: 1,
-    hasMore: true,
+    isLoadingPost: false,
 
-    // Fetch posts with pagination
-    fetchPosts: async (page = 1, userId = null) => {
-        set({ loading: page === 1, isLoadingMore: page > 1 });
+    // Fetch feed posts with pagination
+    fetchFeedPosts: async (page = 1, type = null, searchQuery = '') => {
+        set({ 
+            feedLoading: page === 1, 
+            feedLoadingMore: page > 1,
+            feedType: type,
+            searchQuery: searchQuery
+        });
         try {
-            const url = userId 
-                ? `/posts?page=${page}&userId=${userId}`
-                : `/posts?page=${page}`;
+            let url = `/posts?page=${page}`;
+            if (type) {
+                url += `&type=${type}`;
+            }
+            if (searchQuery) {
+                url += `&search=${searchQuery}`;
+            }
             
             const response = await api.get(url);
+            const { posts: newPosts, hasMore } = response.data;
+            
             set((state) => ({
-                posts: page === 1 ? response.data.posts : [...state.posts, ...response.data.posts],
-                currentPage: page,
-                hasMore: response.data.hasMore,
-                loading: false,
-                isLoadingMore: false
+                feedPosts: page === 1 || state.searchQuery !== searchQuery ? newPosts : [...state.feedPosts, ...newPosts],
+                feedCurrentPage: {
+                    ...state.feedCurrentPage,
+                    [type]: page
+                },
+                feedHasMore: {
+                    ...state.feedHasMore,
+                    [type]: hasMore
+                },
+                feedLoading: false,
+                feedLoadingMore: false
             }));
         } catch (error) {
-            set({ loading: false, isLoadingMore: false });
+            set({ feedLoading: false, feedLoadingMore: false });
+            throw error;
+        }
+    },
+
+    // Fetch profile posts with pagination
+    fetchProfilePosts: async (page = 1, userId) => {
+        set({ 
+            profileLoading: page === 1, 
+            profileLoadingMore: page > 1,
+            profileUserId: userId
+        });
+        try {
+            const response = await api.get(`/posts?page=${page}&userId=${userId}`);
+            const { posts: newPosts, hasMore } = response.data;
+            
+            set((state) => ({
+                profilePosts: page === 1 ? newPosts : [...state.profilePosts, ...newPosts],
+                profileCurrentPage: page,
+                profileHasMore: hasMore,
+                profileLoading: false,
+                profileLoadingMore: false
+            }));
+        } catch (error) {
+            set({ profileLoading: false, profileLoadingMore: false });
             throw error;
         }
     },
 
     // Load more posts
-    loadMorePosts: async () => {
-        const { currentPage, hasMore, fetchPosts } = usePostStore.getState();
-        if (!hasMore) return;
-        
-        const nextPage = currentPage + 1;
-        await fetchPosts(nextPage);
+    loadMorePosts: async (type = null, userId = null, searchQuery = '') => {
+        const { 
+            feedCurrentPage, 
+            feedHasMore, 
+            feedType,
+            profileCurrentPage,
+            profileHasMore,
+            profileUserId,
+            fetchFeedPosts, 
+            fetchProfilePosts 
+        } = usePostStore.getState();
+
+        if (userId) {
+            if (!profileHasMore) return;
+            await fetchProfilePosts(profileCurrentPage + 1, profileUserId);
+        } else {
+            if (!feedHasMore[type]) return;
+            await fetchFeedPosts(feedCurrentPage[type] + 1, type, searchQuery);
+        }
+    },
+
+    // Reset feed posts
+    resetFeedPosts: () => {
+        set((state) => ({
+            feedPosts: [],
+            feedCurrentPage: {
+                ...state.feedCurrentPage,
+                [state.feedType]: 1
+            },
+            feedHasMore: {
+                ...state.feedHasMore,
+                [state.feedType]: true
+            },
+            feedLoading: true,
+            feedLoadingMore: false
+        }));
+    },
+
+    // Reset profile posts
+    resetProfilePosts: () => {
+        set({
+            profilePosts: [],
+            profileCurrentPage: 1,
+            profileHasMore: true,
+            profileLoading: true,
+            profileLoadingMore: false
+        });
+    },
+
+    // Get current posts based on context
+    getCurrentPosts: (userId) => {
+        const state = usePostStore.getState();
+        if (userId) {
+            return {
+                posts: state.profilePosts,
+                loading: state.profileLoading,
+                isLoadingMore: state.profileLoadingMore,
+                hasMore: state.profileHasMore
+            };
+        } else {
+            return {
+                posts: state.feedPosts,
+                loading: state.feedLoading,
+                isLoadingMore: state.feedLoadingMore,
+                hasMore: state.feedHasMore[state.feedType]
+            };
+        }
+    },
+
+    getPostById: async (postId) => {
+        set({ isLoadingPost: true });
+        try {
+            const response = await api.get(`/posts/${postId}`);
+            set({ currentPost: response.data, isLoadingPost: false });
+            return response.data;
+        } catch (error) {
+            set({ isLoadingPost: false, currentPost: null });
+            throw error;
+        }
     },
 
     // Create a new post
-    createPost: async (postData) => {
+    createPost: async (postData, isFromProfile = false) => {
         set({ createPostLoading: true });
         try {
             const response = await api.post('/posts', postData);
-            set((state) => ({
-                posts: [response.data, ...state.posts],
-            }));
+            if (isFromProfile) {
+                set((state) => ({
+                    profilePosts: state.profileUserId === response.data.author._id 
+                        ? [response.data, ...state.profilePosts]
+                        : state.profilePosts
+                }));
+            }
             return response.data;
         } catch (error) {
             throw error;
@@ -76,9 +217,13 @@ const usePostStore = create((set) => ({
         try {
             const response = await api.post(`/posts/like/${postId}`);
             set((state) => ({
-                posts: state.posts.map((post) =>
+                feedPosts: state.feedPosts.map((post) =>
                     post._id === postId ? response.data : post
                 ),
+                profilePosts: state.profilePosts.map((post) =>
+                    post._id === postId ? response.data : post
+                ),
+                currentPost: state.currentPost?._id === postId ? response.data : state.currentPost
             }));
             return response.data;
         } catch (error) {
@@ -94,9 +239,13 @@ const usePostStore = create((set) => ({
         try {
             const response = await api.post(`/posts/unlike/${postId}`);
             set((state) => ({
-                posts: state.posts.map((post) =>
+                feedPosts: state.feedPosts.map((post) =>
                     post._id === postId ? response.data : post
                 ),
+                profilePosts: state.profilePosts.map((post) =>
+                    post._id === postId ? response.data : post
+                ),
+                currentPost: state.currentPost?._id === postId ? response.data : state.currentPost
             }));
             return response.data;
         } catch (error) {
@@ -118,9 +267,13 @@ const usePostStore = create((set) => ({
 
             const response = await api.post(`/posts/comment/${postId}`, formData);
             set((state) => ({
-                posts: state.posts.map((post) =>
+                feedPosts: state.feedPosts.map((post) =>
                     post._id === postId ? response.data : post
                 ),
+                profilePosts: state.profilePosts.map((post) =>
+                    post._id === postId ? response.data : post
+                ),
+                currentPost: state.currentPost?._id === postId ? response.data : state.currentPost
             }));
             return response.data;
         } catch (error) {
@@ -136,7 +289,8 @@ const usePostStore = create((set) => ({
         try {
             await api.delete(`/posts/${postId}`);
             set((state) => ({
-                posts: state.posts.filter((post) => post._id !== postId),
+                feedPosts: state.feedPosts.filter((post) => post._id !== postId),
+                profilePosts: state.profilePosts.filter((post) => post._id !== postId)
             }));
         } catch (error) {
             throw error;
@@ -155,23 +309,38 @@ const usePostStore = create((set) => ({
         }
     },
 
-    // Get post by id
-    getPostById: async (postId) => {
+    // Update post's comment count
+    updatePostCommentCount: (postId, count) => {
+        set((state) => ({
+            feedPosts: state.feedPosts.map((post) =>
+                post._id === postId ? { ...post, comments: post.comments.filter(c => c !== null) } : post
+            ),
+            profilePosts: state.profilePosts.map((post) =>
+                post._id === postId ? { ...post, comments: post.comments.filter(c => c !== null) } : post
+            ),
+            currentPost: state.currentPost?._id === postId 
+                ? { ...state.currentPost, comments: state.currentPost.comments.filter(c => c !== null) }
+                : state.currentPost
+        }));
+    },
+
+    // Update a post
+    updatePost: async (postId, postData) => {
         try {
-            const response = await api.get(`/posts/${postId}`);
+            const response = await api.put(`/posts/${postId}`, postData);
+            set((state) => ({
+                feedPosts: state.feedPosts.map((post) =>
+                    post._id === postId ? response.data : post
+                ),
+                profilePosts: state.profilePosts.map((post) =>
+                    post._id === postId ? response.data : post
+                ),
+                currentPost: state.currentPost?._id === postId ? response.data : state.currentPost
+            }));
             return response.data;
         } catch (error) {
             throw error;
         }
-    },
-
-    // Update post's comment count
-    updatePostCommentCount: (postId, count) => {
-        set((state) => ({
-            posts: state.posts.map((post) =>
-                post._id === postId ? { ...post, comments: Array(count).fill(null) } : post
-            ),
-        }));
     },
 }));
 

@@ -12,7 +12,7 @@ import { IoSettingsOutline } from "react-icons/io5";
 import { IoLogOutOutline } from "react-icons/io5";
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
-
+import usePostStore from '../../store/postStore';
 const menuVariants = {
     initial: { 
         opacity: 0,
@@ -84,7 +84,7 @@ const NavBar = () => {
     }, []);
 
     return (
-        <nav className="bg-gray-50 shadow-lg w-full h-15 md:w-20 fixed bottom-0 md:h-screen flex md:flex-col items-center md:py-8">
+        <nav className="bg-gray-50 shadow-lg w-full h-15 md:w-20 fixed bottom-0 md:h-screen flex md:flex-col items-center md:py-8 z-50">
             {/* Logo/Brand */}
             <Link to="/" className="text-white hidden md:block">
                 <img src={logo} alt="Logo" className="opacity-65 w-10 h-10 " />
@@ -92,7 +92,7 @@ const NavBar = () => {
 
             {/* Navigation Links */}
             <div className="flex md:flex-col flex-1 justify-center cursor-pointer w-full">
-                <div className="flex w-full justify-between md:flex-col items-center md:space-y-4">
+                <div className="flex w-full justify-center md:justify-between md:flex-col items-center md:space-y-4">
                     <Link 
                         to="/" 
                         className="flex justify-center items-center md:block rounded-2xl px-6 md:py-3 text-gray-400 hover:bg-gray-200/80 transition-colors"
@@ -105,12 +105,7 @@ const NavBar = () => {
                     >
                         <FiSearch className="text-2xl" />
                     </Link>
-                    <Link 
-                        to="/create" 
-                        className="flex justify-center bg-gray-200/80 items-center md:block rounded-2xl px-6 py-3 text-gray-500 hover:bg-gray-200/80 transition-colors"
-                    >
-                        <FaPlus className="text-2xl" />
-                    </Link>
+                    
                     <div className="relative" ref={menuRef}>
                         <button 
                             onClick={() => setShowProfileMenu(!showProfileMenu)}
@@ -145,16 +140,6 @@ const NavBar = () => {
                                             </Link>
                                         </motion.div>
                                         <motion.div variants={itemVariants}>
-                                            <Link 
-                                                to="/settings" 
-                                                className="flex items-center px-4 py-2 text-gray-600 hover:scale-105 transition-all duration-300"
-                                                onClick={() => setShowProfileMenu(false)}
-                                            >
-                                                <IoSettingsOutline className="mr-2" />
-                                                <span>Cài đặt</span>
-                                            </Link>
-                                        </motion.div>
-                                        <motion.div variants={itemVariants}>
                                             <button 
                                                 onClick={() => {
                                                     setShowProfileMenu(false);
@@ -171,12 +156,7 @@ const NavBar = () => {
                             )}
                         </AnimatePresence>
                     </div>
-                    <Link 
-                        to="/saved" 
-                        className="flex justify-center items-center md:block rounded-2xl px-6 md:py-3 text-gray-400 hover:bg-gray-200/80 transition-colors"
-                    >
-                        <CiBookmark className="text-2xl" />
-                    </Link>
+                    
                 </div>
             </div>
 

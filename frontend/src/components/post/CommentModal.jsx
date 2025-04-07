@@ -50,6 +50,7 @@ const CommentModal = ({ post, onClose }) => {
                         hasMore={hasMore}
                         isLoading={isLoading()}
                         isLoadingMore={isLoadingMore()}
+                        postId={post._id}
                     />
                 </div>
                 <div className="mt-4">

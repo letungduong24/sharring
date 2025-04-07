@@ -50,9 +50,9 @@ const SignUp = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 bg-opacity-95 text-white flex flex-col relative">
+        <div className="h-full md:min-h-screen bg-gray-50 bg-opacity-95 text-white flex flex-col relative">
             <div className="flex-grow grid grid-cols-1 md:grid-cols-2 min-h-0">
-                <div className="relative text-center md:text-start w-full h-full">
+                <div className="hidden md:block relative text-center md:text-start w-full h-full">
                     <img className="w-full h-full object-cover" src={signUpImage} alt="" />
                 </div>
                 <div className="w-full h-full flex justify-center items-center flex-col">
@@ -107,7 +107,7 @@ const SignUp = () => {
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 text-gray-600"
                             />
                         </div>
-                        {signUpLoading ? (
+                        {signUploading ? (
                             <DarkSmallLoading />
                         ) : (
                             <button
@@ -121,7 +121,7 @@ const SignUp = () => {
                     </form>
                     <div className="mt-4">
                         <p className="text-sm text-gray-500">
-                            Đã có tài khoản? <Link to="/signin" className="text-blue-500 hover:text-blue-600">Đăng nhập</Link>
+                            Đã có tài khoản? <Link to="/signin" className="text-gray-500 font-bold underline hover:text-blue-600">Đăng nhập</Link>
                         </p>
                     </div>
                 </div>

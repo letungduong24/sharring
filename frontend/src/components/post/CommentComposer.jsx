@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { CiImageOn } from "react-icons/ci";
 import { uploadImage } from '../../lib/uploadImage';
 import { IoMdClose } from "react-icons/io";
+import defaultAvatar from '../../assets/defaultAvt.jpg';
 
 const CommentComposer = ({ postId }) => {
     const [content, setContent] = useState('');
@@ -80,7 +81,7 @@ const CommentComposer = ({ postId }) => {
     return (
         <div className="flex gap-3 items-start">
             <img 
-                src={user.profilePicture || '/default-avatar.png'} 
+                src={user.profilePicture || defaultAvatar} 
                 alt="avatar" 
                 className="w-8 h-8 rounded-full"
             />

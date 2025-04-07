@@ -43,7 +43,7 @@ const SignIn = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50  text-white flex flex-col relative">
+    <div className="h-full md:min-h-screen bg-gray-50  text-white flex flex-col relative">
       <div className="flex-grow grid grid-cols-1 md:grid-cols-2 min-h-0">
           <div className="relative text-center hidden md:block md:text-start w-full h-full">
             <img className="w-full h-full object-cover" src={signInImage} alt="" />
@@ -98,7 +98,7 @@ const SignIn = () => {
             </form>
             <div className="mt-4">
               <p className="text-sm text-gray-500">
-                Chưa có tài khoản? <Link to="/signup" className="text-blue-500 hover:text-blue-600">Đăng ký</Link>
+                Chưa có tài khoản? <Link to="/signup" className="text-gray-500 font-bold underline hover:text-blue-600">Đăng ký</Link>
               </p>
             </div>
           </div>

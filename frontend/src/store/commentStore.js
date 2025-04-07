@@ -61,8 +61,39 @@ const useCommentStore = create((set, get) => ({
             }));
 
             // Update post's comment count in post store
-            const { posts, updatePostCommentCount } = usePostStore.getState();
-            updatePostCommentCount(postId, posts.find(post => post._id === postId)?.comments.length + 1);
+            const { feedPosts, profilePosts, currentPost, updatePostCommentCount } = usePostStore.getState();
+            
+            // Update currentPost if it matches
+            if (currentPost?._id === postId) {
+                usePostStore.setState({ 
+                    currentPost: {
+                        ...currentPost,
+                        comments: [...currentPost.comments, newComment]
+                    }
+                });
+            }
+            
+            // Update feed posts if the post exists there
+            if (feedPosts?.some(post => post._id === postId)) {
+                usePostStore.setState({
+                    feedPosts: feedPosts.map(p => 
+                        p._id === postId 
+                            ? { ...p, comments: [...p.comments, newComment] }
+                            : p
+                    )
+                });
+            }
+
+            // Update profile posts if the post exists there
+            if (profilePosts?.some(post => post._id === postId)) {
+                usePostStore.setState({
+                    profilePosts: profilePosts.map(p => 
+                        p._id === postId 
+                            ? { ...p, comments: [...p.comments, newComment] }
+                            : p
+                    )
+                });
+            }
 
             return newComment;
         } catch (error) {
@@ -74,15 +105,34 @@ const useCommentStore = create((set, get) => ({
     },
 
     // Delete a comment
-    deleteComment: async (postId, commentId) => {
+    deleteComment: async (commentId, postId) => {
         try {
-            await api.delete(`/posts/comment/${postId}/${commentId}`);
-            
+            const response = await api.delete(`/posts/${postId}/comment/${commentId}`);
             set((state) => ({
-                comments: state.comments.filter(comment => comment._id !== commentId)
+                comments: state.comments.filter((comment) => comment._id !== commentId),
             }));
+            
+            // Update post's comment count in post store
+            const { posts, currentPost } = usePostStore.getState();
+            
+            // Update currentPost if it matches
+            if (currentPost?._id === postId) {
+                usePostStore.setState({ 
+                    currentPost: response.data
+                });
+            }
+            
+            // Update posts array if the post exists there
+            if (posts.some(post => post._id === postId)) {
+                usePostStore.setState({
+                    posts: posts.map(p => 
+                        p._id === postId 
+                            ? response.data
+                            : p
+                    )
+                });
+            }
         } catch (error) {
-            console.error('Error deleting comment:', error);
             throw error;
         }
     },

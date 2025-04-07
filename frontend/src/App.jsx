@@ -12,7 +12,8 @@ import Profile from './pages/Profile';
 import Topbar from './components/common/Topbar'
 import { PhotoProvider } from 'react-photo-view';
 import 'react-photo-view/dist/react-photo-view.css';
- 
+import PostDetail from './pages/PostDetail';
+import Search from './pages/Search';
 const App = () => {
     const { checkAuth } = useAuthStore();
 
@@ -34,7 +35,7 @@ const App = () => {
             <div className="min-h-screen w-full flex flex-col md:flex-row relative">
                 <Topbar />
                 <NavBar />
-                <main className="flex-grow w-full pb-15 md:pl-20 md:pb-0">
+                <main className="flex-grow h-0 w-full pb-15 md:pl-20 md:pb-0">
                     <Routes>
                         {/* Public Routes */}
                         <Route path="/signin" element={<GuestRoute><SignIn /></GuestRoute>} />
@@ -56,7 +57,22 @@ const App = () => {
                                 </ProtectedRoute>
                             }
                         />
-
+                        <Route
+                            path="/post/:id"
+                            element={
+                                <ProtectedRoute>
+                                    <PostDetail />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/search"
+                            element={
+                                <ProtectedRoute>
+                                    <Search />  
+                                </ProtectedRoute>
+                            }
+                        />
                         {/* Catch all route */}
                         <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>

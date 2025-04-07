@@ -134,14 +134,18 @@ router.get('/profile/:username', checkAuth, async (req, res) => {
     try {
         const user = await User.findOne({ username: req.params.username })
             .select('-password')
-            .populate('followers', 'username profilePicture')
-            .populate('following', 'username profilePicture');
+            .populate('followers', '_id')
+            .populate('following', '_id');
         
         if (!user) {
             return res.status(404).json({ message: 'Người dùng không tồn tại' });
         }
 
-        res.json(user);
+        res.json({
+            ...user.toObject(),
+            followersCount: user.followers.length,
+            followingCount: user.following.length
+        });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
@@ -163,13 +167,15 @@ router.post('/follow/:userId', checkAuth, async (req, res) => {
         // Add to following list
         req.user.following.push(req.params.userId);
         await req.user.save();
-        // req.user từ middleware là mongoose object nên có thể save luôn
 
         // Add to followers list
         userToFollow.followers.push(req.user._id);
         await userToFollow.save();
 
-        res.json({ message: 'Theo dõi thành công' });
+        res.json({ 
+            message: 'Theo dõi thành công',
+            username: userToFollow.username
+        });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
@@ -196,7 +202,10 @@ router.post('/unfollow/:userId', checkAuth, async (req, res) => {
         userToUnfollow.followers = userToUnfollow.followers.filter(id => id.toString() !== req.user._id.toString());
         await userToUnfollow.save();
 
-        res.json({ message: 'Bỏ theo dõi thành công' });
+        res.json({ 
+            message: 'Bỏ theo dõi thành công',
+            username: userToUnfollow.username
+        });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }

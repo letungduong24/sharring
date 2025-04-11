@@ -144,13 +144,6 @@ const Profile = () => {
         }
     };
 
-    const handleOpenFollowers = () => {
-        document.getElementById('followers_modal').showModal();
-    };
-
-    const handleOpenFollowing = () => {
-        document.getElementById('following_modal').showModal();
-    };
 
     if (getProfileLoading) {
         return (
@@ -181,14 +174,12 @@ const Profile = () => {
                         </div>
                         <div className="flex gap-4">
                             <button 
-                                onClick={handleOpenFollowers}
-                                className="text-sm hover:underline cursor-pointer"
+                                className="text-sm "
                             >
                                 {profile.followers?.length || 0} người theo dõi
                             </button>
                             <button 
-                                onClick={handleOpenFollowing}
-                                className="text-sm hover:underline cursor-pointer"
+                                className="text-sm "
                             >
                                 {profile.following?.length || 0} đang theo dõi
                             </button>
@@ -360,78 +351,7 @@ const Profile = () => {
                 <form method="dialog" className="modal-backdrop">
                     <button>close</button>
                 </form>
-            </dialog>
-
-            {/* Followers Modal */}
-            <dialog id="followers_modal" className="modal">
-                <div className="modal-box">
-                    <h3 className="font-bold text-lg mb-4">Người theo dõi</h3>
-                    <div className="flex flex-col gap-2 max-h-[60vh] overflow-y-auto">
-                        {profile.followers?.length > 0 ? (
-                            profile.followers.map((follower) => (
-                                <div 
-                                    key={follower._id} 
-                                    className="flex items-center gap-3 p-2 hover:bg-gray-100 rounded-lg cursor-pointer"
-                                    onClick={() => {
-                                        document.getElementById('followers_modal').close();
-                                        navigate(`/profile/${follower.username}`);
-                                    }}
-                                >
-                                    <img 
-                                        src={follower.profilePicture || defaultAvt} 
-                                        alt={follower.username}
-                                        className="w-10 h-10 rounded-full object-cover"
-                                    />
-                                    <div>
-                                        <p className="font-semibold">{follower.username}</p>
-                                    </div>
-                                </div>
-                            ))
-                        ) : (
-                            <p className="text-center text-gray-500">Chưa có người theo dõi</p>
-                        )}
-                    </div>
-                </div>
-                <form method="dialog" className="modal-backdrop">
-                    <button>close</button>
-                </form>
-            </dialog>
-
-            {/* Following Modal */}
-            <dialog id="following_modal" className="modal">
-                <div className="modal-box">
-                    <h3 className="font-bold text-lg mb-4">Đang theo dõi</h3>
-                    <div className="flex flex-col gap-2 max-h-[60vh] overflow-y-auto">
-                        {profile.following?.length > 0 ? (
-                            profile.following.map((following) => (
-                                <div 
-                                    key={following._id} 
-                                    className="flex items-center gap-3 p-2 hover:bg-gray-100 rounded-lg cursor-pointer"
-                                    onClick={() => {
-                                        document.getElementById('following_modal').close();
-                                        navigate(`/profile/${following.username}`);
-                                    }}
-                                >
-                                    <img 
-                                        src={following.profilePicture || defaultAvt} 
-                                        alt={following.username}
-                                        className="w-10 h-10 rounded-full object-cover"
-                                    />
-                                    <div>
-                                        <p className="font-semibold">{following.username}</p>
-                                        <p className="text-sm text-gray-500">{following.bio || 'Chưa có tiểu sử'}</p>
-                                    </div>
-                                </div>
-                            ))
-                        ) : (
-                            <p className="text-center text-gray-500">Chưa theo dõi ai</p>
-                        )}
-                    </div>
-                </div>
-                <form method="dialog" className="modal-backdrop">
-                    <button>close</button>
-                </form>
-            </dialog>
+            </dialog>            
         </div>
     );
 };

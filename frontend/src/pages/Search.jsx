@@ -33,7 +33,7 @@ const Search = () => {
                     <input 
                         type="search" 
                         className="grow focus:outline-none focus:ring-0" 
-                        placeholder="Search by username or keyword" 
+                        placeholder="Tìm người dùng hoặc bài viết" 
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         onKeyDown={handleSearch}

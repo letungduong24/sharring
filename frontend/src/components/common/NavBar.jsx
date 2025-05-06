@@ -61,7 +61,6 @@ const staggerContainer = {
 const NavBar = () => {
     const { user, signout } = useAuthStore();
     const navigate = useNavigate();
-    const [showProfileMenu, setShowProfileMenu] = useState(false);
     const menuRef = useRef(null);
 
     const handleLogout = async () => {
@@ -99,30 +98,35 @@ const NavBar = () => {
                     >
                         <RiHome3Line className="text-2xl" />
                     </Link>
-                    <Link 
-                        to="/search" 
-                        className="flex justify-center items-center md:block rounded-2xl px-6 md:py-3 text-gray-400 hover:bg-gray-200/80 transition-colors"
-                    >
-                        <FiSearch className="text-2xl" />
-                    </Link>
-                    <Link 
-                        to={`/profile/${user.username}`} 
-                        className="flex justify-center items-center md:block rounded-2xl px-6 md:py-3 text-gray-400 hover:bg-gray-200/80 transition-colors"
-                    >
-                        <FiSearch className="text-2xl" />
-                    </Link>
+                    {user && (
+                        <Link 
+                            to="/search" 
+                            className="flex justify-center items-center md:block rounded-2xl px-6 md:py-3 text-gray-400 hover:bg-gray-200/80 transition-colors"
+                        >
+                            <FiSearch className="text-2xl" />
+                        </Link>
+                    )}
+                    
+                    {user && (
+                            <Link 
+                                to={`/profile/${user.username}`} 
+                                className="flex justify-center items-center md:block rounded-2xl px-6 md:py-3 text-gray-400 hover:bg-gray-200/80 transition-colors"
+                            >
+                                <RxPerson className="text-2xl" />
+                            </Link>
+                    )}
+                    
                 </div>
             </div>
 
-            <button 
-                onClick={() => {
-                    setShowProfileMenu(false);
-                    handleLogout();
-                }}
-                className="hidden md:block text-gray-400 hover:bg-gray-200/80 rounded-2xl px-6 py-3 transition-colors cursor-pointer"
-            >
-                <IoLogOutOutline className="mr-2" />
-            </button>
+            {user && (
+                <button 
+                    onClick={() => handleLogout()}
+                    className="cursor-pointer flex justify-center items-center md:block rounded-2xl px-6 md:py-3 text-gray-400 hover:bg-gray-200/80 transition-colors"
+                >
+                    <IoLogOutOutline className="text-2xl" />
+                </button>
+            )}
         </nav>
     );
 };

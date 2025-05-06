@@ -105,65 +105,23 @@ const NavBar = () => {
                     >
                         <FiSearch className="text-2xl" />
                     </Link>
-                    
-                    <div className="relative" ref={menuRef}>
-                        <button 
-                            onClick={() => setShowProfileMenu(!showProfileMenu)}
-                            className="cursor-pointer flex justify-center items-center  rounded-2xl px-6 md:py-3 text-gray-400 hover:bg-gray-200/80 transition-colors"
-                            >
-                            <RxPerson className="text-2xl" />
-                        </button>
-                        
-                        <AnimatePresence>
-                            {user && showProfileMenu && (
-                                <motion.div 
-                                    className="absolute md:left-full md:ml-2 bottom-10 md:bottom-auto md:top-0 w-40 bg-gray-50 rounded-lg shadow-lg overflow-hidden"
-                                    variants={menuVariants}
-                                    initial="initial"
-                                    animate="animate"
-                                    exit="exit"
-                                >
-                                    <motion.div 
-                                        className="py-2"
-                                        variants={staggerContainer}
-                                        initial="initial"
-                                        animate="animate"
-                                    >
-                                        <motion.div variants={itemVariants}>
-                                            <Link 
-                                                to={`/profile/${user.username}`} 
-                                                className="flex items-center px-4 py-2 text-gray-600 hover:scale-105 transition-all duration-300"
-                                                onClick={() => setShowProfileMenu(false)}
-                                            >
-                                                <RxPerson className="mr-2" />
-                                                <span>Trang cá nhân</span>
-                                            </Link>
-                                        </motion.div>
-                                        <motion.div variants={itemVariants}>
-                                            <button 
-                                                onClick={() => {
-                                                    setShowProfileMenu(false);
-                                                    handleLogout();
-                                                }}
-                                                className=" cursor-pointer flex items-center px-4 py-2 text-gray-600 hover:scale-105 transition-all duration-300"
-                                            >
-                                                <IoLogOutOutline className="mr-2" />
-                                                <span>Đăng xuất</span>
-                                            </button>
-                                        </motion.div>
-                                    </motion.div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </div>
-                    
+                    <Link 
+                        to={`/profile/${user.username}`} 
+                        className="flex justify-center items-center md:block rounded-2xl px-6 md:py-3 text-gray-400 hover:bg-gray-200/80 transition-colors"
+                    >
+                        <FiSearch className="text-2xl" />
+                    </Link>
                 </div>
             </div>
 
             <button 
+                onClick={() => {
+                    setShowProfileMenu(false);
+                    handleLogout();
+                }}
                 className="hidden md:block text-gray-400 hover:bg-gray-200/80 rounded-2xl px-6 py-3 transition-colors cursor-pointer"
             >
-                <HiOutlineMenuAlt2 className="text-2xl" />
+                <IoLogOutOutline className="mr-2" />
             </button>
         </nav>
     );

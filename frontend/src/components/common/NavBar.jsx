@@ -115,6 +115,14 @@ const NavBar = () => {
                                 <RxPerson className="text-2xl" />
                             </Link>
                     )}
+                    {user && (
+                        <button 
+                        onClick={() => handleLogout()}
+                            className="flex cursor-pointer  justify-center items-center md:hidden rounded-2xl px-6 md:py-3 text-gray-400 hover:bg-gray-200/80 transition-colors"
+                        >
+                            <IoLogOutOutline className="text-2xl" />
+                        </button>
+                    )}
                     
                 </div>
             </div>
@@ -122,7 +130,7 @@ const NavBar = () => {
             {user && (
                 <button 
                     onClick={() => handleLogout()}
-                    className="cursor-pointer flex justify-center items-center md:block rounded-2xl px-6 md:py-3 text-gray-400 hover:bg-gray-200/80 transition-colors"
+                    className="hidden cursor-pointer  justify-center items-center md:flex rounded-2xl px-6 md:py-3 text-gray-400 hover:bg-gray-200/80 transition-colors"
                 >
                     <IoLogOutOutline className="text-2xl" />
                 </button>

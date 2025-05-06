@@ -9,11 +9,6 @@ const Topbar = () => {
         <img src={logo} className='opacity-65 w-full h-full' alt="" />
         <p className='font-bold text-2xl'>sharre!</p>
       </div>
-       <button 
-        className="  hover:bg-gray-200/80 rounded-2xl transition-colors cursor-pointer"
-      >
-        <HiOutlineMenuAlt2 className="text-2xl" />
-      </button>
     </div>
   )
 }

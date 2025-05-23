@@ -8,7 +8,7 @@ const checkAuth = require('../middleware/checkAuth');
 const setCookieOptions = {
     httpOnly: true,
     secure: false, 
-    sameSite: 'None', 
+    sameSite: 'Lax', 
     maxAge: 7 * 24 * 60 * 60 * 1000, 
     path: '/'
 };

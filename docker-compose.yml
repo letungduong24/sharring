@@ -8,6 +8,7 @@ services:
       - "5000:5000"
     networks:
       - mern
+    image: letungduong1624/sharre-server:0.0.1
   
   client:
     build: 
@@ -17,6 +18,8 @@ services:
       - "3000:80"
     networks:
       - mern
+    image: letungduong1624/sharre-client:0.0.1
+
   
 networks:
   mern:
